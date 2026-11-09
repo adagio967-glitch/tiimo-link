@@ -1,0 +1,53 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tiimo 일정 등록</title>
+  <style>
+    body {
+      font-family: -apple-system, sans-serif;
+      text-align: center;
+      padding: 60px 20px;
+    }
+    button {
+      background: #6255d8;
+      color: white;
+      border: 0;
+      border-radius: 12px;
+      padding: 16px 24px;
+      font-size: 17px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Tiimo 일정 등록</h2>
+  <p id="status">일정 등록 준비 완료</p>
+  <button id="open">Tiimo에서 등록하기</button>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const date = params.get("date");
+    const title = params.get("title");
+
+    const button = document.getElementById("open");
+    const status = document.getElementById("status");
+
+    if (!date || !title || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      status.textContent = "날짜 또는 제목이 올바르지 않습니다.";
+      button.disabled = true;
+    } else {
+      status.textContent = `${date} · ${title}`;
+      button.onclick = () => {
+        const input = date + "\n" + title;
+        const url = "shortcuts://run-shortcut?name=" +
+          encodeURIComponent("Tiimo 일정등록") +
+          "&input=text&text=" +
+          encodeURIComponent(input);
+        window.location.href = url;
+      };
+    }
+  </script>
+</body>
+</html>
