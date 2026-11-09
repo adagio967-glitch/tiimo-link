@@ -1,52 +1,97 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
   <title>Tiimo 일정 등록</title>
   <style>
     body {
-      font-family: -apple-system, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont,
+                   sans-serif;
       text-align: center;
       padding: 60px 20px;
+      line-height: 1.6;
     }
     button {
       background: #6255d8;
       color: white;
-      border: 0;
+      border: none;
       border-radius: 12px;
       padding: 16px 24px;
       font-size: 17px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:disabled {
+      opacity: 0.4;
+    }
+    #status {
+      margin: 24px 0;
+      overflow-wrap: anywhere;
     }
   </style>
 </head>
 <body>
   <h2>Tiimo 일정 등록</h2>
-  <p id="status">일정 등록 준비 완료</p>
-  <button id="open">Tiimo에서 등록하기</button>
+  <p id="status">일정 정보를 확인하고 있습니다.</p>
+  <button id="open" disabled>
+    Tiimo에서 등록하기
+  </button>
+  <p id="help">
+    자동 실행되지 않으면 위 버튼을 눌러주세요.
+  </p>
 
   <script>
-    const params = new URLSearchParams(location.search);
+    const params = new URLSearchParams(
+      window.location.search
+    );
+
     const date = params.get("date");
     const title = params.get("title");
 
-    const button = document.getElementById("open");
     const status = document.getElementById("status");
+    const button = document.getElementById("open");
 
-    if (!date || !title || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      status.textContent = "날짜 또는 제목이 올바르지 않습니다.";
-      button.disabled = true;
+    function validDate(value) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(value || "")) {
+        return false;
+      }
+
+      const [y, m, d] = value.split("-").map(Number);
+      const parsed = new Date(Date.UTC(y, m - 1, d));
+
+      return parsed.getUTCFullYear() === y &&
+             parsed.getUTCMonth() === m - 1 &&
+             parsed.getUTCDate() === d;
+    }
+
+    if (!validDate(date) || !title || !title.trim()) {
+      status.textContent =
+        "날짜 또는 제목이 올바르지 않습니다.";
     } else {
-      status.textContent = `${date} · ${title}`;
-      button.onclick = () => {
-        const input = date + "\n" + title;
-        const url = "shortcuts://run-shortcut?name=" +
-          encodeURIComponent("Tiimo 일정등록") +
-          "&input=text&text=" +
-          encodeURIComponent(input);
-        window.location.href = url;
-      };
+      const input = date + "\n" + title;
+
+      const shortcutURL =
+        "shortcuts://run-shortcut?name=" +
+        encodeURIComponent("Tiimo 일정등록") +
+        "&input=text&text=" +
+        encodeURIComponent(input);
+
+      status.textContent = date + " · " + title;
+      button.disabled = false;
+
+      button.addEventListener("click", function () {
+        window.location.href = shortcutURL;
+      });
+
+      // 페이지 진입 시 자동 실행 시도
+      // iOS에서 차단되면 버튼으로 수동 실행
+      setTimeout(function () {
+        if (document.visibilityState === "visible") {
+          window.location.href = shortcutURL;
+        }
+      }, 500);
     }
   </script>
 </body>
